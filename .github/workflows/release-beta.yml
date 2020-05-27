@@ -1,0 +1,26 @@
+on:
+    push:
+        branches:
+            - master
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v2
+              with:
+                  submodules: true
+            - name: Install Node.js
+              uses: actions/setup-node@v1
+              with:
+                  node-version: 10.x
+            - run: yarn install
+            - run: yarn check-version
+            - run: yarn prepare-insiders-build
+            - run: yarn set-version
+            - run: yarn lint
+            - run: yarn test
+            - run: yarn vsce publish --yarn --pat ${{ secrets.MARKETPLACE_TOKEN }}
+            - run: yarn add-tag
+            - run: yarn create-pr
