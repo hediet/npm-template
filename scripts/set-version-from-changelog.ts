@@ -30,6 +30,6 @@ export class Changelog {
 	}
 
 	public toString(): string {
-		return this.latestVersion;
+		return this.src;
 	}
 }
