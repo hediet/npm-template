@@ -1,8 +1,8 @@
-name: Release
+name: Trigger Prerelease
 on:
     push:
         branches:
-            - "releases/**"
+            - master
 
 jobs:
     build:
@@ -18,11 +18,4 @@ jobs:
                   node-version: 10.x
                   registry-url: "https://registry.npmjs.org"
             - run: yarn install --immutable
-            - run: yarn lint
-            - run: yarn run-script set-version-from-changelog
-            - run: yarn build
-            - run: yarn test
-            - run: yarn run-script pub
-              env:
-                  NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-                  GH_TOKEN: ${{ secrets.GH_TOKEN }}
+            - run: yarn run-script trigger-prerelease

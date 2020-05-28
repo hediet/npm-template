@@ -5,11 +5,6 @@ import { parse } from "semver";
 
 export async function run(): Promise<void> {
 	const version = readPackageJson().version;
-	if (version.toLowerCase() === "unreleased") {
-		console.log("Nothing to release");
-		return;
-	}
-
 	const semVer = parse(version);
 	if (!semVer) {
 		throw new Error(`Invalid version "${version}"`);
@@ -19,7 +14,6 @@ export async function run(): Promise<void> {
 	if (semVer.prerelease.length > 0) {
 		releaseTag = "" + semVer.prerelease[0];
 	}
-
 	await exec("npm", [
 		"publish",
 		...(releaseTag ? ["--tag", releaseTag] : []),
@@ -27,61 +21,10 @@ export async function run(): Promise<void> {
 
 	const gitTag = `v${version}`;
 	console.log(`Creating a version tag "${gitTag}".`);
-
 	const api = new GitHub(process.env.GH_TOKEN);
-	//(await api.repos.updateFile({  })).data.commit.
-
-	const tagRef = `refs/tags/${gitTag}`;
 	await api.git.createRef({
 		...context.repo,
-		ref: tagRef,
+		ref: `refs/tags/${gitTag}`,
 		sha: context.sha,
 	});
-
-	if (releaseTag !== undefined) {
-		const sourceBranch = `v${version}`;
-		const sourceRef = `refs/heads/${sourceBranch}`;
-		await api.git.createRef({
-			...context.repo,
-			ref: sourceRef,
-			sha: context.sha,
-		});
-
-		// TODO: This is not the best way to remove the prerelease part. Build number is missing.
-		const newVersion = `${semVer.major}.${semVer.minor}.${semVer.patch}`;
-		const newBranch = `releases/v${newVersion}`;
-		const targetRef = `refs/heads/${newBranch}`;
-		await api.git.createRef({
-			...context.repo,
-			ref: targetRef,
-			sha: context.sha,
-		});
-
-		const d = (
-			await api.repos.getContents({
-				...context.repo,
-				path: "CHANGELOG.md",
-				ref: sourceRef,
-			})
-		).data;
-		if (Array.isArray(d)) {
-			throw new Error();
-		}
-
-		await api.repos.createOrUpdateFile({
-			...context.repo,
-			path: "CHANGELOG.md",
-			branch: sourceBranch,
-			sha: d.sha,
-			content: Buffer.from("Hello World").toString("base64"),
-			message: `Release of version ${newVersion}`,
-		});
-
-		await api.pulls.create({
-			...context.repo,
-			base: newBranch,
-			head: sourceBranch,
-			title: `Release ${version} as ${newVersion}`,
-		});
-	}
 }
