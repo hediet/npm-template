@@ -20,3 +20,5 @@ jobs:
             - run: yarn install --immutable
             - run: yarn run-script set-version-from-changelog
             - run: yarn run-script trigger-prerelease
+              env:
+                  GH_TOKEN: ${{ secrets.GH_TOKEN }}
