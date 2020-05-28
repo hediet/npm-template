@@ -30,6 +30,15 @@ export async function run(): Promise<void> {
 	const targetBranch = `releases/v${newVersion}`;
 	const targetRef = `refs/heads/${targetBranch}`;
 
+	try {
+		await api.git.deleteRef({
+			...context.repo,
+			ref: targetRef,
+		});
+	} catch (e) {
+		// NOOP
+	}
+
 	await api.git.createRef({
 		...context.repo,
 		ref: targetRef,
