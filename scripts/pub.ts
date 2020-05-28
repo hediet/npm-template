@@ -1,71 +1,36 @@
 import { GitHub, context } from "@actions/github";
 import { exec } from "@actions/exec";
 import { readPackageJson } from "./shared";
-import * as stream from "stream";
+import { parse } from "semver";
 
-export class StringStream extends stream.Writable {
-	constructor() {
-		super();
-		stream.Writable.call(this);
-	}
-
-	private contents = "";
-
-	_write(
-		data: string | Buffer | Uint8Array,
-		encoding: string,
-		next: Function
-	): void {
-		this.contents += data;
-		next();
-	}
-
-	getContents(): string {
-		return this.contents;
-	}
-}
-
-export async function run(args: string[]): Promise<void> {
-	let pubArgs = "";
-	let releaseTag: string | undefined = "";
-	if (args.length === 1) {
-		releaseTag = args[0];
-		pubArgs = ` --tag ${releaseTag}`;
-	}
-
-	let failedDueToAlreadyPublished = false;
-
-	const resultStatus = await exec(`npm publish${pubArgs}`, [], {
-		ignoreReturnCode: true,
-		listeners: {
-			errline: (line) => {
-				if (
-					line.indexOf(
-						"cannot publish over the previously published version"
-					) !== -1
-				) {
-					failedDueToAlreadyPublished = true;
-				}
-			},
-		},
-	});
-
-	if (resultStatus !== 0) {
-		if (failedDueToAlreadyPublished) {
-			console.log(
-				"This version has already been published. A version tag will not be created."
-			);
-			return;
-		} else {
-			throw new Error("npm publish failed.");
-		}
-	}
-
+export async function run(): Promise<void> {
 	const version = readPackageJson().version;
-	const gitTag = `v${version}${releaseTag ? `-${releaseTag}` : ""}`;
+	if (version.toLowerCase() === "unreleased") {
+		console.log("Nothing to release");
+		return;
+	}
+
+	const semVer = parse(version);
+	if (!semVer) {
+		throw new Error(`Invalid version "${version}"`);
+	}
+
+	let releaseTag: string | undefined = undefined;
+	if (semVer.prerelease.length > 0) {
+		releaseTag = "" + semVer.prerelease[0];
+	}
+
+	await exec("npm", [
+		"publish",
+		...(releaseTag ? ["--tag", releaseTag] : []),
+	]);
+
+	const gitTag = `v${version}`;
 	console.log(`Creating a version tag "${gitTag}".`);
 
 	const api = new GitHub(process.env.GH_TOKEN);
+	//(await api.repos.updateFile({  })).data.commit.
+
 	const tagRef = `refs/tags/${gitTag}`;
 	await api.git.createRef({
 		...context.repo,
@@ -74,28 +39,35 @@ export async function run(args: string[]): Promise<void> {
 	});
 
 	if (releaseTag !== undefined) {
-		/*const branchRef = `refs/heads/${gitTag}`;
-
+		const sourceRef = `refs/heads/v${version}`;
 		await api.git.createRef({
 			...context.repo,
-			ref: branchRef,
+			ref: sourceRef,
 			sha: context.sha,
-		});*/
+		});
 
-		if (releaseTag === "next") {
-			await api.git.updateRef({
-				...context.repo,
-				ref: "heads/release",
-				force: true,
-				sha: context.sha,
-			});
-		}
-		/*
-		await api.pulls.create({
-			base: "release",
+		// TODO: This is not the best way to remove the prerelease part. Build number is missing.
+		const newVersion = `${semVer.major}.${semVer.minor}.${semVer.patch}`;
+		const newBranch = `releases/v${newVersion}`;
+		const targetRef = `refs/heads/${newBranch}`;
+		await api.git.createRef({
 			...context.repo,
-			title: `Release Version ${version}`,
-			head: branchRef,
-		});*/
+			ref: targetRef,
+			sha: context.sha,
+		});
+
+		await api.repos.updateFile({
+			...context.repo,
+			path: "CHANGELOG.md",
+			content: Buffer.from("Hello World").toString("base64"),
+			message: `Release of version ${newVersion}`,
+		});
+
+		await api.pulls.create({
+			...context.repo,
+			base: newBranch,
+			head: targetRef,
+			title: `Release ${version} as ${newVersion}`,
+		});
 	}
 }

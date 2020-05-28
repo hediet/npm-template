@@ -4,13 +4,6 @@
 __metadata:
   version: 4
 
-"@actions/core@npm:^1.2.4":
-  version: 1.2.4
-  resolution: "@actions/core@npm:1.2.4"
-  checksum: 3/3b2a63bac21fab0a48c8ba817e18942ea6af5318951d818ff97377d474fc549df8acf893be2c0997cc05a80fd4a96223430bbb757e79969db99e44320397176f
-  languageName: node
-  linkType: hard
-
 "@actions/exec@npm:^1.0.4":
   version: 1.0.4
   resolution: "@actions/exec@npm:1.0.4"
@@ -78,12 +71,12 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@hediet/npm-template@workspace:."
   dependencies:
-    "@actions/core": ^1.2.4
     "@actions/exec": ^1.0.4
     "@actions/github": ^2.2.0
     "@types/assert": ^1.4.6
     "@types/chai": ^4.2.11
     "@types/mocha": ^7.0.2
+    "@types/semver": ^7.2.0
     "@types/sinon": ^9.0.0
     "@typescript-eslint/eslint-plugin": ^3.0.1
     "@typescript-eslint/parser": ^3.0.1
@@ -92,6 +85,7 @@ __metadata:
     eslint: ^7.1.0
     mocha: ^7.1.2
     prettier: ^2.0.5
+    semver: ^7.3.2
     sinon: ^9.0.2
     source-map-support: ^0.5.19
     ts-node: ^8.9.1
@@ -447,6 +441,15 @@ __metadata:
   dependencies:
     "@types/node": "*"
   checksum: 3/e6e6613c800aeda63e2331e753e8d21df1a2c9aa7a4bc71ed792a848e4811fc96e609759089355314a2318c76eff1f161499cd242044838ab1e6f56e463ebb9c
+  languageName: node
+  linkType: hard
+
+"@types/semver@npm:^7.2.0":
+  version: 7.2.0
+  resolution: "@types/semver@npm:7.2.0"
+  dependencies:
+    "@types/node": "*"
+  checksum: 3/f72d56e80bc382e16e20e2370be4dc1d776fb67db91afcb88f7069f57450f8f1b282075d33ccb23d2455881c2e4279f31cd69e3d2f6f5f75d58a0d510e48bb6f
   languageName: node
   linkType: hard
 

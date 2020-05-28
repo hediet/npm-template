@@ -1,11 +1,12 @@
-name: Release
+name: Release (next)
 on:
     push:
         branches:
-            - release
+            - master
+            - "releases/**"
 
 jobs:
-    publish:
+    build:
         runs-on: ubuntu-latest
         steps:
             - name: Checkout
@@ -16,7 +17,8 @@ jobs:
               uses: actions/setup-node@v1
               with:
                   node-version: 10.x
-            - run: yarn install
+                  registry-url: "https://registry.npmjs.org"
+            - run: yarn install --immutable
             - run: yarn lint
             - run: yarn run-script set-version-from-changelog
             - run: yarn build

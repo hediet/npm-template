@@ -4,7 +4,7 @@ import { readPackageJson, readTextFileSync } from "./shared";
 
 export async function run(): Promise<void> {
 	const changelog = readTextFileSync(join(__dirname, "../CHANGELOG.md"));
-	const result = /## \[(.*\..*\..*)\]/.exec(changelog);
+	const result = /## \[(.*?)\]/.exec(changelog);
 	const recentVersion = result[1];
 
 	const packageJson = readPackageJson();
