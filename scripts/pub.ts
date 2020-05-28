@@ -74,18 +74,27 @@ export async function run(args: string[]): Promise<void> {
 	});
 
 	if (releaseTag !== undefined) {
-		const branchRef = `refs/heads/${gitTag}`;
+		/*const branchRef = `refs/heads/${gitTag}`;
+
 		await api.git.createRef({
 			...context.repo,
 			ref: branchRef,
 			sha: context.sha,
-		});
+		});*/
 
+		if (releaseTag === "next") {
+			api.git.updateRef({
+				...context.repo,
+				ref: "refs/heads/release",
+				sha: context.sha,
+			});
+		}
+		/*
 		await api.pulls.create({
 			base: "release",
 			...context.repo,
 			title: `Release Version ${version}`,
 			head: branchRef,
-		});
+		});*/
 	}
 }
