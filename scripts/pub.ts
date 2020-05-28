@@ -56,7 +56,7 @@ export async function run(): Promise<void> {
 			sha: context.sha,
 		});
 
-		await api.repos.updateFile({
+		await api.repos.createOrUpdateFile({
 			...context.repo,
 			path: "CHANGELOG.md",
 			content: Buffer.from("Hello World").toString("base64"),
