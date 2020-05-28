@@ -33,26 +33,27 @@ export async function run(args: string[]): Promise<void> {
 		pubArgs = ` --tag ${releaseTag}`;
 	}
 
+	let failedDueToAlreadyPublished = false;
+
 	await exec(`npm publish${pubArgs}`, [], {
 		ignoreReturnCode: true,
 		listeners: {
-			stdout: (data) => {
-				// is not called.
-				console.log("stdout:", data);
-			},
 			errline: (line) => {
-				// is not called.
-				console.log("errline: ", line);
-			},
-			stdline: (line) => {
-				console.log("stdline: ", line);
+				if (
+					line.indexOf(
+						"cannot publish over previously published version"
+					) !== -1
+				) {
+					failedDueToAlreadyPublished = true;
+				}
 			},
 		},
 	});
 
+	console.log("failedDueToAlreadyPublished: ", failedDueToAlreadyPublished);
+
 	return;
 
-	let failedDueToAlreadyPublished = false; //npm publish${pubArgs}
 	const s = new StringStream();
 	const resultStatus = await exec("node --eval 'console.log(`test`)'", [], {
 		ignoreReturnCode: true,
