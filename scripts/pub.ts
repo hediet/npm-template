@@ -85,7 +85,8 @@ export async function run(args: string[]): Promise<void> {
 		if (releaseTag === "next") {
 			await api.git.updateRef({
 				...context.repo,
-				ref: "refs/heads/release",
+				ref: "heads/release",
+				force: true,
 				sha: context.sha,
 			});
 		}
