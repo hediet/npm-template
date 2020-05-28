@@ -1,3 +1,4 @@
+name: Release (next)
 on:
     push:
         branches:
@@ -15,12 +16,13 @@ jobs:
               uses: actions/setup-node@v1
               with:
                   node-version: 10.x
+                  registry-url: "https://registry.npmjs.org"
             - run: yarn install
-            - run: yarn check-version
-            - run: yarn prepare-insiders-build
-            - run: yarn set-version
             - run: yarn lint
+            - run: yarn run-script set-version-from-changelog
+            - run: yarn build
             - run: yarn test
-            - run: yarn vsce publish --yarn --pat ${{ secrets.MARKETPLACE_TOKEN }}
-            - run: yarn add-tag
-            - run: yarn create-pr
+            - run: yarn run-script pub next
+              env:
+                  NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+                  GH_TOKEN: ${{ secrets.GH_TOKEN }}

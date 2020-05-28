@@ -1,7 +1,8 @@
+name: Release
 on:
     push:
-        tags:
-            - v*
+        branches:
+            - release
 
 jobs:
     publish:
@@ -16,5 +17,11 @@ jobs:
               with:
                   node-version: 10.x
             - run: yarn install
-            - run: yarn check
-            - run: yarn pub publish --yarn --pat ${{ secrets.MARKETPLACE_TOKEN }}
+            - run: yarn lint
+            - run: yarn run-script set-version-from-changelog
+            - run: yarn build
+            - run: yarn test
+            - run: yarn run-script pub
+              env:
+                  NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+                  GH_TOKEN: ${{ secrets.GH_TOKEN }}
