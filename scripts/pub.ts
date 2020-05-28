@@ -54,6 +54,8 @@ export async function run(args: string[]): Promise<void> {
 		},
 	});
 
+	console.log("failedDueToAlreadyPublished", failedDueToAlreadyPublished);
+
 	return;
 
 	//npm publish${pubArgs}
