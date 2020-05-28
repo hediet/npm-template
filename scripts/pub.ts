@@ -33,6 +33,28 @@ export async function run(args: string[]): Promise<void> {
 		pubArgs = ` --tag ${releaseTag}`;
 	}
 
+	const s2 = new StringStream(); // Like in your tests.
+	await exec(`npm publish${pubArgs}`, [], {
+		ignoreReturnCode: true,
+		outStream: s2,
+		listeners: {
+			stdout: (data) => {
+				// is not called.
+				console.log("stdout:", data);
+			},
+			errline: (line) => {
+				// is not called.
+				console.log("errline: ", line);
+			},
+			stdline: (line) => {
+				console.log("stdline: ", line);
+			},
+		},
+	});
+	console.log("result: " + s2.getContents());
+
+	return;
+
 	let failedDueToAlreadyPublished = false; //npm publish${pubArgs}
 	const s = new StringStream();
 	const resultStatus = await exec("node --eval 'console.log(`test`)'", [], {
