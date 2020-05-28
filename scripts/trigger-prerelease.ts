@@ -31,14 +31,19 @@ export async function run(): Promise<void> {
 	const targetRef = `refs/heads/${targetBranch}`;
 
 	try {
-		await api.git.createRef({
+		await api.git.deleteRef({
 			...context.repo,
 			ref: targetRef,
-			sha: context.sha,
 		});
 	} catch (e) {
-		// NOOP
+		console.error("Could not delete branch: ", e);
 	}
+
+	await api.git.createRef({
+		...context.repo,
+		ref: targetRef,
+		sha: context.sha,
+	});
 
 	const d = (
 		await api.repos.getContents({
