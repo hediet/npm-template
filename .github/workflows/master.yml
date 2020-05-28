@@ -18,4 +18,5 @@ jobs:
                   node-version: 10.x
                   registry-url: "https://registry.npmjs.org"
             - run: yarn install --immutable
+            - run: yarn run-script set-version-from-changelog
             - run: yarn run-script trigger-prerelease
