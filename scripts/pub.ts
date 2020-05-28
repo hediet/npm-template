@@ -38,7 +38,11 @@ export async function run(args: string[]): Promise<void> {
 	await exec(`npm publish${pubArgs}`, [], {
 		ignoreReturnCode: true,
 		listeners: {
+			stdline: (line) => {
+				console.log("stdline: ", line);
+			},
 			errline: (line) => {
+				console.log("errline: ", line);
 				if (
 					line.indexOf(
 						"cannot publish over previously published version"
@@ -50,10 +54,9 @@ export async function run(args: string[]): Promise<void> {
 		},
 	});
 
-	console.log("failedDueToAlreadyPublished: ", failedDueToAlreadyPublished);
-
 	return;
 
+	//npm publish${pubArgs}
 	const s = new StringStream();
 	const resultStatus = await exec("node --eval 'console.log(`test`)'", [], {
 		ignoreReturnCode: true,
