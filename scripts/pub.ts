@@ -33,10 +33,8 @@ export async function run(args: string[]): Promise<void> {
 		pubArgs = ` --tag ${releaseTag}`;
 	}
 
-	const s2 = new StringStream(); // Like in your tests.
 	await exec(`npm publish${pubArgs}`, [], {
 		ignoreReturnCode: true,
-		outStream: s2,
 		listeners: {
 			stdout: (data) => {
 				// is not called.
@@ -51,7 +49,6 @@ export async function run(args: string[]): Promise<void> {
 			},
 		},
 	});
-	console.log("result: " + s2.getContents());
 
 	return;
 
