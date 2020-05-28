@@ -12,7 +12,7 @@
 	],
 	"scripts": {
 		"dev": "tsc --watch",
-		"lint": "prettier --check ./src ./test && eslint ./src ./test --ext .js,.jsx,.ts,.tsx",
+		"lint": "yarn run-script check-version && prettier --check ./src ./test && eslint ./src ./test --ext .js,.jsx,.ts,.tsx",
 		"build": "tsc",
 		"test": "mocha --require source-map-support/register \"./dist/test/**/*.test.js\"",
 		"run-script": "node ./scripts/run-script"
@@ -32,7 +32,6 @@
 		"typescript": "^3.9.3"
 	},
 	"dependencies": {
-		"@actions/core": "^1.2.4",
 		"@actions/exec": "^1.0.4",
 		"@actions/github": "^2.2.0",
 		"@typescript-eslint/eslint-plugin": "^3.0.1",

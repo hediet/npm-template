@@ -1,9 +1,9 @@
 import {} from "mocha";
 import { equal } from "assert";
-//import { Test } from "../";
+import { Test } from "../src";
 
-describe("", () => {
-	it("", () => {
-		equal(1, 1);
+describe("Test", () => {
+	it("works", () => {
+		equal(new Test().test(), "hello world!");
 	});
 });

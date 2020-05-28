@@ -1,8 +1,6 @@
-import { writeFileSync } from "fs";
-import { join } from "path";
-import { readPackageJson, readTextFileSync } from "./shared";
+import { readPackageJson } from "./shared";
 
-export async function run(_args: string[]): Promise<void> {
+export async function run(): Promise<void> {
 	const packageJson = readPackageJson();
 	if (packageJson.version !== "set-version-from-changelog") {
 		throw new Error(
