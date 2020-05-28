@@ -4,10 +4,10 @@ import { parse } from "semver";
 import { getChangelog } from "./set-version-from-changelog";
 
 export async function run(): Promise<void> {
-	const version = readPackageJson().version;
-	const semVer = parse(version);
+	const prereleaseVersion = readPackageJson().version;
+	const semVer = parse(prereleaseVersion);
 	if (!semVer) {
-		throw new Error(`Invalid version "${version}"`);
+		throw new Error(`Invalid version "${prereleaseVersion}"`);
 	}
 
 	if (semVer.prerelease.length === 0) {
@@ -17,23 +17,32 @@ export async function run(): Promise<void> {
 	}
 
 	const api = new GitHub(process.env.GH_TOKEN);
-	const sourceBranch = `pending-releases/v${version}`;
-	const sourceRef = `refs/heads/${sourceBranch}`;
-	await api.git.createRef({
-		...context.repo,
-		ref: sourceRef,
-		sha: context.sha,
-	});
+	const prereleaseBranch = `pending-releases/v${prereleaseVersion}`;
+	const prereleaseRef = `refs/heads/${prereleaseBranch}`;
+	try {
+		await api.git.createRef({
+			...context.repo,
+			ref: prereleaseRef,
+			sha: context.sha,
+		});
+	} catch (e) {
+		if (e.toString().indexOf("Reference already exists")) {
+			throw new Error(
+				`Version "${prereleaseVersion}" has been published already!`
+			);
+		}
+		throw e;
+	}
 
 	// TODO: This is not the best way to remove the prerelease part. Build number is missing.
-	const newVersion = `${semVer.major}.${semVer.minor}.${semVer.patch}`;
-	const targetBranch = `releases/v${newVersion}`;
+	const releaseVersion = `${semVer.major}.${semVer.minor}.${semVer.patch}`;
+	const targetBranch = `releases/v${releaseVersion}`;
 	const targetRef = `refs/heads/${targetBranch}`;
 
 	try {
 		await api.git.deleteRef({
 			...context.repo,
-			ref: targetRef,
+			ref: `heads/${targetBranch}`,
 		});
 	} catch (e) {
 		console.error("Could not delete branch: ", e);
@@ -49,7 +58,7 @@ export async function run(): Promise<void> {
 		await api.repos.getContents({
 			...context.repo,
 			path: "CHANGELOG.md",
-			ref: sourceRef,
+			ref: prereleaseRef,
 		})
 	).data;
 	if (Array.isArray(d)) {
@@ -57,21 +66,21 @@ export async function run(): Promise<void> {
 	}
 
 	const changelog = getChangelog();
-	changelog.setLatestVersion(newVersion);
+	changelog.setLatestVersion(releaseVersion);
 
 	await api.repos.createOrUpdateFile({
 		...context.repo,
 		path: "CHANGELOG.md",
-		branch: sourceBranch,
+		branch: prereleaseBranch,
 		sha: d.sha,
 		content: Buffer.from(changelog.toString()).toString("base64"),
-		message: `Release of version ${newVersion}`,
+		message: `Release of version ${releaseVersion}`,
 	});
 
 	await api.pulls.create({
 		...context.repo,
 		base: targetBranch,
-		head: sourceBranch,
-		title: `Release ${version} as ${newVersion}`,
+		head: prereleaseBranch,
+		title: `Release ${prereleaseVersion} as ${releaseVersion}`,
 	});
 }
