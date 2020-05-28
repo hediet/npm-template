@@ -22,12 +22,9 @@ export async function run(args: string[]): Promise<void> {
 	console.log(`Creating a version tag "${gitTag}".`);
 
 	const api = new GitHub(process.env.GH_TOKEN);
-	const r = await api.git.createTag({
+	api.git.createRef({
 		...context.repo,
-		tag: gitTag,
-		object: context.sha,
-		type: "commit",
-		message: gitTag,
+		ref: `refs/tags/${tag}`,
+		sha: context.sha,
 	});
-	console.log(r);
 }
