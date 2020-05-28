@@ -39,7 +39,8 @@ export async function run(): Promise<void> {
 	});
 
 	if (releaseTag !== undefined) {
-		const sourceRef = `refs/heads/v${version}`;
+		const sourceBranch = `v${version}`;
+		const sourceRef = `refs/heads/${sourceBranch}`;
 		await api.git.createRef({
 			...context.repo,
 			ref: sourceRef,
@@ -56,9 +57,22 @@ export async function run(): Promise<void> {
 			sha: context.sha,
 		});
 
+		const d = (
+			await api.repos.getContents({
+				...context.repo,
+				path: "CHANGELOG.md",
+				ref: sourceRef,
+			})
+		).data;
+		if (Array.isArray(d)) {
+			throw new Error();
+		}
+
 		await api.repos.createOrUpdateFile({
 			...context.repo,
 			path: "CHANGELOG.md",
+			branch: sourceBranch,
+			sha: d.sha,
 			content: Buffer.from("Hello World").toString("base64"),
 			message: `Release of version ${newVersion}`,
 		});
@@ -66,7 +80,7 @@ export async function run(): Promise<void> {
 		await api.pulls.create({
 			...context.repo,
 			base: newBranch,
-			head: targetRef,
+			head: sourceBranch,
 			title: `Release ${version} as ${newVersion}`,
 		});
 	}
