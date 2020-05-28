@@ -30,11 +30,15 @@ export async function run(): Promise<void> {
 	const targetBranch = `releases/v${newVersion}`;
 	const targetRef = `refs/heads/${targetBranch}`;
 
-	await api.git.createRef({
-		...context.repo,
-		ref: targetRef,
-		sha: context.sha,
-	});
+	try {
+		await api.git.createRef({
+			...context.repo,
+			ref: targetRef,
+			sha: context.sha,
+		});
+	} catch (e) {
+		// NOOP
+	}
 
 	const d = (
 		await api.repos.getContents({
