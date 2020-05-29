@@ -4,7 +4,12 @@ import { readPackageJson, readTextFileSync } from "./shared";
 
 export async function run(): Promise<void> {
 	const packageJson = readPackageJson();
-	packageJson.version = getChangelog().latestVersion;
+	const latestVersion = getChangelog().latestVersion;
+	if (latestVersion.kind === "unreleased") {
+		packageJson.version = "unreleased";
+	} else {
+		packageJson.version = latestVersion.version;
+	}
 
 	writeFileSync(
 		join(__dirname, "../package.json"),
