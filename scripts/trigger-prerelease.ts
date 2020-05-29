@@ -4,6 +4,15 @@ import { parse } from "semver";
 import { getChangelog } from "./set-version-from-changelog";
 
 export async function run(): Promise<void> {
+	const changelog = getChangelog();
+	if (changelog.latestVersion.kind === "unreleased") {
+		return;
+	}
+	if (changelog.latestVersion.releaseDate !== undefined) {
+		// version has been released already
+		return;
+	}
+
 	const prereleaseVersion = readPackageJson().version;
 	const semVer = parse(prereleaseVersion);
 	if (!semVer) {
@@ -16,7 +25,7 @@ export async function run(): Promise<void> {
 		);
 	}
 
-	const api = new GitHub(process.env.GH_TOKEN);
+	const api = new GitHub(process.env.GH_TOKEN!);
 	const prereleaseBranch = `pending-releases/v${prereleaseVersion}`;
 	const prereleaseRef = `refs/heads/${prereleaseBranch}`;
 	try {
@@ -62,11 +71,10 @@ export async function run(): Promise<void> {
 		})
 	).data;
 	if (Array.isArray(d)) {
-		throw new Error();
+		throw new Error("Unexpected result");
 	}
 
-	const changelog = getChangelog();
-	changelog.setLatestVersion(releaseVersion);
+	changelog.setLatestVersion(releaseVersion, new Date());
 
 	await api.repos.createOrUpdateFile({
 		...context.repo,
