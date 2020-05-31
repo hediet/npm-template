@@ -1,6 +1,7 @@
 import { writeFileSync } from "fs";
 import { join } from "path";
 import { readPackageJson, readTextFileSync } from "./shared";
+import { SemanticVersion } from "@hediet/semver";
 
 export async function run(): Promise<void> {
 	const packageJson = readPackageJson();
@@ -8,7 +9,7 @@ export async function run(): Promise<void> {
 	if (latestVersion.kind === "unreleased") {
 		packageJson.version = "unreleased";
 	} else {
-		packageJson.version = latestVersion.version;
+		packageJson.version = latestVersion.version.toString();
 	}
 
 	writeFileSync(
@@ -25,7 +26,11 @@ export function getChangelog(): Changelog {
 export class Changelog {
 	private readonly regex = /## \[(.*?)\]([ \t]*-[ \t]*(.*))?/;
 	public get latestVersion():
-		| { kind: "released"; version: string; releaseDate: Date | undefined }
+		| {
+				kind: "released";
+				version: SemanticVersion;
+				releaseDate: Date | undefined;
+		  }
 		| { kind: "unreleased" } {
 		const result = this.regex.exec(this.src);
 		if (!result) {
@@ -41,7 +46,7 @@ export class Changelog {
 		}
 		return {
 			kind: "released",
-			version: result[1],
+			version: SemanticVersion.parse(result[1]),
 			releaseDate: date,
 		};
 	}
@@ -49,7 +54,7 @@ export class Changelog {
 	constructor(private src: string) {}
 
 	public setLatestVersion(
-		newVersion: string,
+		newVersion: SemanticVersion,
 		releaseDate: Date | undefined
 	): void {
 		let dateStr = "";

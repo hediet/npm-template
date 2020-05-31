@@ -1,6 +1,4 @@
 import { GitHub, context } from "@actions/github";
-import { readPackageJson } from "./shared";
-import { parse } from "semver";
 import { getChangelog } from "./set-version-from-changelog";
 
 export async function run(): Promise<void> {
@@ -18,20 +16,15 @@ export async function run(): Promise<void> {
 		return;
 	}
 
-	const prereleaseVersion = readPackageJson().version;
-	const semVer = parse(prereleaseVersion);
-	if (!semVer) {
-		throw new Error(`Invalid version "${prereleaseVersion}"`);
-	}
-
-	if (semVer.prerelease.length === 0) {
+	const semVer = changelog.latestVersion.version;
+	if (!semVer.prerelease) {
 		throw new Error(
 			`Cannot release directly! Use a prerelease version first!`
 		);
 	}
 
 	const api = new GitHub(process.env.GH_TOKEN!);
-	const prereleaseBranch = `pending-releases/v${prereleaseVersion}`;
+	const prereleaseBranch = `pending-releases/v${semVer.toString()}`;
 	const prereleaseRef = `refs/heads/${prereleaseBranch}`;
 	try {
 		await api.git.createRef({
@@ -42,14 +35,13 @@ export async function run(): Promise<void> {
 	} catch (e) {
 		if (e.toString().indexOf("Reference already exists")) {
 			throw new Error(
-				`Version "${prereleaseVersion}" has been published already!`
+				`Version "${semVer.toString()}" has been published already!`
 			);
 		}
 		throw e;
 	}
 
-	// TODO: This is not the best way to remove the prerelease part. Build number is missing.
-	const releaseVersion = `${semVer.major}.${semVer.minor}.${semVer.patch}`;
+	const releaseVersion = semVer.with({ prerelease: null });
 	const targetBranch = `releases/v${releaseVersion}`;
 	const targetRef = `refs/heads/${targetBranch}`;
 
@@ -94,6 +86,6 @@ export async function run(): Promise<void> {
 		...context.repo,
 		base: targetBranch,
 		head: prereleaseBranch,
-		title: `Release ${prereleaseVersion} as ${releaseVersion}`,
+		title: `Release ${semVer.toString()} as ${releaseVersion}`,
 	});
 }
